@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var credits = 1000
     @State private var betAmount: String = ""
     @State private var isDisabledSpinButton = false
+    @State private var confirmExit = false
     private var jackPot = 5000
     var body: some View {
         ZStack {
@@ -123,7 +124,7 @@ struct ContentView: View {
                             .cornerRadius(20)
                     }.padding(.bottom, 50)
                     // Quit Button
-                    Button(action: spinPressedButton) {
+                    Button(action: quitButton) {
                         Text("Quit")
                             .bold()
                             .foregroundColor(.white)
@@ -131,13 +132,33 @@ struct ContentView: View {
                             .background(.orange)
                             .cornerRadius(20)
                     }.padding(.bottom, 50)
+                    .confirmationDialog(
+                    "Are you sure you want to import this file?",
+                    isPresented: $confirmExit)
+                    {
+                        Button {
+                            // Handle import action.
+                            exit(0)
+                        } label: {
+                            Text("OK")
+                        }
+                        Button("Cancel", role: .cancel) {
+                        }
+                    }
                 }
             }
         }
     }
     
     /**
-     * Event for pressing Spin button
+    * Pressing Quit button event
+     */
+    private func quitButton() {
+        confirmExit = true
+    }
+    
+    /**
+     * Pressing Spin button event
      */
     private func spinPressedButton() {
         // Check whether the user has enough money or not
