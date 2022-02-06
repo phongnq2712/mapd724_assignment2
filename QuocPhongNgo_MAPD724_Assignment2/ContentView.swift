@@ -13,13 +13,20 @@ import CoreData
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
 
-    private var symbols = ["apple", "cherry", "lemon", "orange", "strawberry"]
+    private var symbols = ["apple", "cherry", "lemon", "orange", "strawberry", ""]
     @State private var numbers = [0, 1, 2]
-    @State private var credits = 1000
-    @State private var betAmount: String = ""
+    @State private var playerMoney = 1000
+    @State private var winnings = 0;
+    @State private var apple = 0;
+    @State private var cherry = 0;
+    @State private var lemon = 0;
+    @State private var orange = 0;
+    @State private var strawberry = 0;
+    @State private var playerBet: String = ""
     @State private var isDisabledSpinButton = false
     @State private var confirmExit = false
-    private var jackPot = 5000
+    @State private var message: String = ""
+    @State private var jackPot = 5000
     var body: some View {
         ZStack {
             Rectangle()
@@ -51,7 +58,7 @@ struct ContentView: View {
                     .background(Color.white.opacity(0.8))
                     .cornerRadius(20)
                 // Credits
-                Text("Player Money: " + String(credits))
+                Text("Player Money: " + String(playerMoney))
                     .foregroundColor(.black)
                     .padding(.all, 10)
                     .background(Color.white.opacity(0.8))
@@ -63,9 +70,9 @@ struct ContentView: View {
                         .background(Color.white.opacity(0.8))
                         .cornerRadius(20)
                     let binding = Binding<String>(get: {
-                                self.betAmount
+                                self.playerBet
                             }, set: {
-                                self.betAmount = $0
+                                self.playerBet = $0
                                 // enable Spin button
                                 if(self.isDisabledSpinButton) {
                                     self.isDisabledSpinButton = false
@@ -102,20 +109,34 @@ struct ContentView: View {
                         .padding(.all, 10)
                     Spacer()
                 }
-                Spacer()
-                // Spin Button
-                Button(action: spinPressedButton) {
-                    Text("Spin")
-                        .bold()
-                        .foregroundColor(.white)
-                        .padding(.all, 20)
-                        .background(self.isDisabledSpinButton == true ? Color.gray : Color.blue)
-                        .cornerRadius(20)
-                }.padding(.bottom, 30).disabled(self.isDisabledSpinButton)
+               
+                // Message
+                HStack {
+                    TextField("", text: $message)
+//                        .bold()
+                        .foregroundColor(Color(red: 255/255, green: 45/255, blue: 147/255))
+                        .padding(10)
+                        .multilineTextAlignment(.center)
+                        .font(.system(size: 24, weight: .heavy, design: .default))
+                        .background(Color(red: 0/255, green: 29/255, blue: 38/255))
+                        
+                }
                 
+                // Spin Button
+                HStack {
+                    Button(action: spinPressedButton) {
+                        Text("Spin")
+                            .bold()
+                            .foregroundColor(.white)
+                            .padding(.all, 20)
+                            .background(self.isDisabledSpinButton == true ? Color.gray : Color.blue)
+                            .cornerRadius(20)
+                    }.padding(.bottom, 30).disabled(self.isDisabledSpinButton)
+                }
+                                
                 HStack {
                     // Reset Button
-                    Button(action: spinPressedButton) {
+                    Button(action: resetButton) {
                         Text("Reset")
                             .bold()
                             .foregroundColor(.white)
@@ -158,14 +179,37 @@ struct ContentView: View {
     }
     
     /**
+    * Pressing Reset button event
+     */
+    private func resetButton() {
+        self.jackPot = 5000
+        self.playerMoney = 1000
+        self.message = ""
+    }
+    
+    /**
      * Pressing Spin button event
      */
     private func spinPressedButton() {
+        self.apple = 0
+        self.lemon = 0
+        self.cherry = 0
+        self.strawberry = 0
+        self.orange = 0
+        self.message = ""
         // Check whether the user has enough money or not
-        let playerMoney = (betAmount as NSString).integerValue
-        if(playerMoney > self.credits) {
+        let currentBet = (playerBet as NSString).integerValue
+        // current Bet = 0
+        if(currentBet == 0) {
+            self.message = "Please enter bet amount!"
+            
+            return
+        }
+        // current Bet > player money
+        if(currentBet > self.playerMoney) {
             // grey out the Spin button
             self.isDisabledSpinButton = true
+            self.message = "Invalid bet amount!"
             
             return
         } else {
@@ -174,6 +218,51 @@ struct ContentView: View {
         self.numbers[0] = Int.random(in: 0...self.symbols.count - 1)
         self.numbers[1] = Int.random(in: 0...self.symbols.count - 1)
         self.numbers[2] = Int.random(in: 0...self.symbols.count - 1)
+        
+        // loop array numbers
+        for (index, element) in self.numbers.enumerated() {
+            switch(element) {
+            case 0:
+                // apple
+                self.apple += 1
+                break
+            case 1:
+                // cherry
+                self.cherry += 1
+                break
+            case 2:
+                // lemon
+                self.lemon += 1
+                break
+            case 3:
+                // orange
+                self.orange += 1
+                break
+            case 4:
+                self.strawberry += 1
+                break
+            case 5:
+                // Lost
+                self.playerMoney -= currentBet
+                self.message = "You lost!"
+                break
+            default:
+                break
+            }
+        }
+        // Player will win if having two same fruits
+        if(self.apple == 2 || self.orange == 2 || self.strawberry == 2 || self.cherry == 2
+           || self.lemon == 2) {
+            self.playerMoney += currentBet * 2
+            self.message = "You win!"
+        }
+        // Player will win Jackpot if having three same fruits
+        if(self.apple == 3 || self.orange == 3 || self.strawberry == 3 || self.cherry == 3
+           || self.lemon == 3) {
+            self.message = "JACKPOT"
+            self.playerMoney += self.jackPot
+            self.jackPot = 1000
+        }
     }
 }
 
