@@ -154,7 +154,7 @@ struct ContentView: View {
                             .cornerRadius(20)
                     }.padding(.bottom, 50)
                     .confirmationDialog(
-                    "Are you sure you want to import this file?",
+                    "Are you sure you want to exit this game?",
                     isPresented: $confirmExit)
                     {
                         Button {
